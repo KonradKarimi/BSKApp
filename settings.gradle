@@ -1,0 +1,2 @@
+rootProject.name='BSK App'
+include ':app'
