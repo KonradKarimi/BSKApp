@@ -57,7 +57,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:onClick="@{() -> viewmodel.readFile()}"
                 android:text="Read File" />
 
             <Button
@@ -83,7 +82,7 @@
             android:layout_marginBottom="16dp"
             android:afterTextChanged="@{(editable)->viewmodel.setText(editable)}"
             android:ems="10"
-            android:hint="Text to Encrypt"
+            android:hint="Enter text to Encrypt"
             android:inputType="textPersonName"
             app:layout_constraintBottom_toTopOf="@+id/linearLayout"
             app:layout_constraintEnd_toEndOf="parent"

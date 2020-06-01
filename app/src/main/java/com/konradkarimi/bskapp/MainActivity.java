@@ -35,24 +35,24 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        Map<String, Object> sampleData = new HashMap<>();
-
-        sampleData.put("test", "Hello");
-        sampleData.put("test2", "World");
-
-        db.collection("TestData").add(sampleData).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-            @Override
-            public void onSuccess(DocumentReference documentReference) {
-                Log.i("BKS", "Success sending data to firestore doc id: " + documentReference.getId());
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.w("BSK", "Error setting in firestore", e);
-            }
-        });
+//        FirebaseFirestore db = FirebaseFirestore.getInstance();
+//
+//        Map<String, Object> sampleData = new HashMap<>();
+//
+//        sampleData.put("test", "Hello");
+//        sampleData.put("test2", "World");
+//
+//        db.collection("TestData").add(sampleData).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+//            @Override
+//            public void onSuccess(DocumentReference documentReference) {
+//                Log.i("BKS", "Success sending data to firestore doc id: " + documentReference.getId());
+//            }
+//        }).addOnFailureListener(new OnFailureListener() {
+//            @Override
+//            public void onFailure(@NonNull Exception e) {
+//                Log.w("BSK", "Error setting in firestore", e);
+//            }
+//        });
 
     }
 
