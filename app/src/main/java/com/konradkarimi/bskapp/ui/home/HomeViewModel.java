@@ -1,5 +1,8 @@
 package com.konradkarimi.bskapp.ui.home;
 
+import android.content.Intent;
+import android.net.Uri;
+import android.provider.DocumentsContract;
 import android.text.Editable;
 import android.text.TextWatcher;
 
@@ -13,9 +16,14 @@ import androidx.lifecycle.ViewModel;
 
 import com.konradkarimi.bskapp.BR;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 public class HomeViewModel extends ViewModel {
 
+
     private MutableLiveData<String> mText;
+    private MutableLiveData<Uri> mUri;
 
     public HomeViewModel() {
         mText = new MutableLiveData<>();
@@ -28,6 +36,14 @@ public class HomeViewModel extends ViewModel {
 
     public void setText(CharSequence s) {
         this.mText.setValue(s.toString());
+    }
+
+    public LiveData<Uri> getUri() {
+        return mUri;
+    }
+
+    public void setUri(Uri uri) {
+        this.mUri.setValue(uri);
     }
 
     public void readFile() {
