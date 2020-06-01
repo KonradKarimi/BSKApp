@@ -10,19 +10,23 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.konradkarimi.bskapp.R;
 import com.konradkarimi.bskapp.databinding.FragmentHomeBinding;
+import com.konradkarimi.bskapp.utils.FileHandler;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -36,6 +40,8 @@ public class HomeFragment extends Fragment {
     private HomeViewModel homeViewModel;
     private FragmentHomeBinding binding;
 
+    FileHandler fileHandler = new FileHandler(this);
+
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -46,10 +52,27 @@ public class HomeFragment extends Fragment {
         binding.setViewmodel(homeViewModel);
         binding.setLifecycleOwner(this);
         View view = binding.getRoot();
+
+
+        binding.readFBTN.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                fileHandler.openFile(Uri.parse("download"));
+            }
+        });
+
         binding.encryptBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openFile(Uri.parse("download"));
+                fileHandler.sendFile(homeViewModel.getText().getValue());
+                Toast.makeText(getContext(), homeViewModel.getText().getValue(), Toast.LENGTH_LONG).show();
+            }
+        });
+
+        binding.decryptBTN.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
         return view;
@@ -62,17 +85,6 @@ public class HomeFragment extends Fragment {
     }
 
 
-    private void openFile(Uri pickerInitialUri) {
-        System.out.println("openfile");
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("text/*");
-
-        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
-
-        startActivityForResult(intent, PICK_TXT_FILE);
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -81,10 +93,8 @@ public class HomeFragment extends Fragment {
             Uri uri = null;
             if (data != null) {
                 uri = data.getData();
-                System.out.println("This is uri:" + uri);
-//                homeViewModel.setUri(uri);
                 try {
-                    String fileText = readTextFromUri(uri);
+                    String fileText = fileHandler.readTextFromUri(uri);
                     homeViewModel.setText(fileText);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -93,16 +103,5 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private String readTextFromUri(Uri uri) throws IOException {
-        StringBuilder stringBuilder = new StringBuilder();
-        try (InputStream inputStream = getActivity().getContentResolver().openInputStream(uri);
-             BufferedReader reader = new BufferedReader(
-                     new InputStreamReader(Objects.requireNonNull(inputStream)))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-        }
-        return stringBuilder.toString();
-    }
+
 }
