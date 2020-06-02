@@ -24,6 +24,7 @@ public class HomeViewModel extends ViewModel {
 
     private MutableLiveData<String> mText;
     private MutableLiveData<Uri> mUri;
+    private MutableLiveData<String> encryptedMessage;
 
     public HomeViewModel() {
         mText = new MutableLiveData<>();
@@ -44,6 +45,14 @@ public class HomeViewModel extends ViewModel {
 
     public void setUri(Uri uri) {
         this.mUri.setValue(uri);
+    }
+
+    public LiveData<String> getEncryptedMsg() {
+        return encryptedMessage;
+    }
+
+    public void setEncryptedMessage(String encryptedMessage) {
+        this.encryptedMessage.setValue(encryptedMessage);
     }
 
     public void readFile() {

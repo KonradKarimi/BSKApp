@@ -23,6 +23,7 @@ import androidx.lifecycle.ViewModelProviders;
 
 import com.konradkarimi.bskapp.R;
 import com.konradkarimi.bskapp.databinding.FragmentHomeBinding;
+import com.konradkarimi.bskapp.utils.AESUtils;
 import com.konradkarimi.bskapp.utils.FileHandler;
 
 import java.io.BufferedReader;
@@ -30,6 +31,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class HomeFragment extends Fragment {
@@ -39,8 +42,8 @@ public class HomeFragment extends Fragment {
 
     private HomeViewModel homeViewModel;
     private FragmentHomeBinding binding;
-
-    FileHandler fileHandler = new FileHandler(this);
+    private AESUtils aesUtils = new AESUtils();
+    private FileHandler fileHandler = new FileHandler(this);
 
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -64,15 +67,19 @@ public class HomeFragment extends Fragment {
         binding.encryptBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                byte[] encrypted = aesUtils.encryptText(homeViewModel.getText().getValue());
+                String encryptedMSG = new String(encrypted, StandardCharsets.UTF_8);
+                homeViewModel.setText(encryptedMSG);
                 fileHandler.sendFile(homeViewModel.getText().getValue());
-                Toast.makeText(getContext(), homeViewModel.getText().getValue(), Toast.LENGTH_LONG).show();
             }
         });
 
         binding.decryptBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                byte[] decrypted = aesUtils.decryptText(homeViewModel.getText().getValue());
+                String decryptedMSG = new String(decrypted, StandardCharsets.UTF_8);
+                homeViewModel.setText(decryptedMSG);
             }
         });
         return view;
