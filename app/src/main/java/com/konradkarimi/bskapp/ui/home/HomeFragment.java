@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Objects;
 
 public class HomeFragment extends Fragment {
@@ -44,7 +45,6 @@ public class HomeFragment extends Fragment {
     private FragmentHomeBinding binding;
     private AESUtils aesUtils = new AESUtils();
     private FileHandler fileHandler = new FileHandler(this);
-
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -67,8 +67,9 @@ public class HomeFragment extends Fragment {
         binding.encryptBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                byte[] encrypted = aesUtils.encryptText(homeViewModel.getText().getValue());
-                String encryptedMSG = new String(encrypted, StandardCharsets.UTF_8);
+                HashMap<String, byte[]> encryptedData = aesUtils.encryptText(homeViewModel.getText().getValue());
+                homeViewModel.setEncryptedData(encryptedData);
+                String encryptedMSG = new String(encryptedData.get("CipherText"), StandardCharsets.UTF_8);
                 homeViewModel.setText(encryptedMSG);
                 fileHandler.sendFile(homeViewModel.getText().getValue());
             }
@@ -77,9 +78,8 @@ public class HomeFragment extends Fragment {
         binding.decryptBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                byte[] decrypted = aesUtils.decryptText(homeViewModel.getText().getValue());
-                String decryptedMSG = new String(decrypted, StandardCharsets.UTF_8);
-                homeViewModel.setText(decryptedMSG);
+                String decryptedText = aesUtils.decrypt(homeViewModel.getEncryptedData().getValue().get("IV"), homeViewModel.getEncryptedData().getValue().get("CipherText"));
+                homeViewModel.setText(decryptedText);
             }
         });
         return view;
