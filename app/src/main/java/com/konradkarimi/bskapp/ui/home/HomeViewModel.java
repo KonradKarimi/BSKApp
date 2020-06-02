@@ -18,6 +18,7 @@ import com.konradkarimi.bskapp.BR;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 
 public class HomeViewModel extends ViewModel {
 
@@ -25,6 +26,7 @@ public class HomeViewModel extends ViewModel {
     private MutableLiveData<String> mText;
     private MutableLiveData<Uri> mUri;
     private MutableLiveData<String> encryptedMessage;
+    private MutableLiveData<HashMap<String, byte[]>> encryptedData = new MutableLiveData<HashMap<String, byte[]>>();
 
     public HomeViewModel() {
         mText = new MutableLiveData<>();
@@ -53,6 +55,14 @@ public class HomeViewModel extends ViewModel {
 
     public void setEncryptedMessage(String encryptedMessage) {
         this.encryptedMessage.setValue(encryptedMessage);
+    }
+
+    public void setEncryptedData(HashMap<String, byte[]> encryptedData) {
+        this.encryptedData.setValue(encryptedData);
+    }
+
+    public LiveData<HashMap<String, byte[]>> getEncryptedData() {
+        return encryptedData;
     }
 
     public void readFile() {

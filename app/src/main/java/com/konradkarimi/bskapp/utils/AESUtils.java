@@ -1,25 +1,30 @@
 package com.konradkarimi.bskapp.utils;
 
-import android.os.Build;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 import android.util.Base64;
 import android.util.Log;
 
-import androidx.annotation.RequiresApi;
-
-import com.konradkarimi.bskapp.services.FStoreCallback;
 import com.konradkarimi.bskapp.services.FirestoreService;
 
-import java.nio.ByteBuffer;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.spec.AlgorithmParameterSpec;
+import java.security.NoSuchProviderException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
@@ -27,7 +32,6 @@ import javax.crypto.spec.SecretKeySpec;
 
 import static javax.crypto.Cipher.DECRYPT_MODE;
 import static javax.crypto.Cipher.ENCRYPT_MODE;
-import static javax.crypto.Cipher.getInstance;
 
 public class AESUtils {
 
@@ -36,74 +40,110 @@ public class AESUtils {
     private FirestoreService fsService;
     public SecretKey oriKey;
     public SecretKey restoredKey;
-    public byte[] ini;
+    public byte[] iIv;
 
     public AESUtils() {
         fsService = new FirestoreService();
     }
 
-    private SecretKey generateKey() {
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] key = new byte[16];
-        secureRandom.nextBytes(key);
-        SecretKey secretKey = new SecretKeySpec(key, "AES");
-        fsService.saveKey(convertKeyToString(secretKey));
-        oriKey = secretKey;
-        return secretKey;
-    }
-
-    private byte[] generateInitVector() {
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] initVector = new byte[12];
-        secureRandom.nextBytes(initVector);
-        ini = initVector;
-        return initVector;
-    }
-
-    public byte[] encryptText(String textToEncrypt) {
-
-        SecretKey secretKey = generateKey();
-        byte[] initVector = generateInitVector();
-
-        final Cipher cipher;
-        byte[] cipherMessage = new byte[0];
+    public SecretKey generateKey() {
+        SecretKey key = null;
         try {
-            cipher = getInstance("AES/GCM/NoPadding");
-            GCMParameterSpec parameterSpec = new GCMParameterSpec(128, initVector);
-            cipher.init(ENCRYPT_MODE, secretKey, parameterSpec);
-            byte[] cipherText = cipher.doFinal(textToEncrypt.getBytes());
+            KeyGenerator keygen = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
+            KeyGenParameterSpec keygenParameterSpec = new KeyGenParameterSpec.Builder("AESsymKey", KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                    .setRandomizedEncryptionRequired(true)
+                    .build();
+            keygen.init(keygenParameterSpec);
+            key = keygen.generateKey();
+        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
+            e.printStackTrace();
+        }
+        return key;
+    }
 
-            ByteBuffer byteBuffer = ByteBuffer.allocate(initVector.length + cipherText.length);
-            byteBuffer.put(initVector);
-            byteBuffer.put(cipherText);
-            cipherMessage = byteBuffer.array();
+    public SecretKey getSymmetricKey() {
+        KeyStore keyStore = createKeystore();
+        if (!isKeyExist(keyStore)) {
+            generateKey();
+        }
+        SecretKey key = null;
+        try {
+            key = (SecretKey) keyStore.getKey("AESsymKey", null);
+        } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
+            e.printStackTrace();
+        }
+        return key;
+    }
 
+    public Boolean isKeyExist(KeyStore keyStore) {
+        try {
+            Enumeration<String> alieses = keyStore.aliases();
+            while (alieses.hasMoreElements()) {
+                return ("AESsymKey".equals(alieses.nextElement()));
+            }
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public KeyStore createKeystore() {
+        KeyStore keystore = null;
+        try {
+            keystore = KeyStore.getInstance("AndroidKeyStore");
+            keystore.load(null);
+        } catch (KeyStoreException | CertificateException | IOException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return keystore;
+    }
+
+    public void removeKeyFromKeystore() {
+        KeyStore keyStore = createKeystore();
+        if (isKeyExist(keyStore)) {
+            try {
+                keyStore.deleteEntry("AESsymKey");
+            } catch (KeyStoreException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    public HashMap<String, byte[]> encryptText(String textToEncrypt) {
+        removeKeyFromKeystore();
+
+        byte[] cipherText = new byte[0];
+        byte[] plainText = textToEncrypt.getBytes();
+        byte[] iv = new byte[0];
+        try {
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(ENCRYPT_MODE, getSymmetricKey());
+            iv = cipher.getIV();
+            cipherText = cipher.doFinal(plainText);
+            fsService.saveIV(Arrays.toString(iv));
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+            e.printStackTrace();
+        }
+        HashMap<String, byte[]> encrypted = new HashMap<>();
+        encrypted.put("IV", iv);
+        encrypted.put("CipherText", cipherText);
+        return encrypted;
+    }
+
+    public String decrypt(byte[] ivBytes, byte[] encryptedText) {
+        String decryptedData = null;
+        try {
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(DECRYPT_MODE, getSymmetricKey(), new GCMParameterSpec(128, ivBytes));
+            byte[] decrypted = cipher.doFinal(encryptedText);
+            decryptedData = new String(decrypted, StandardCharsets.UTF_8);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
             e.printStackTrace();
         }
-
-        return cipherMessage;
-    }
-
-    public byte[] decryptText(final String textToDecrypt) {
-        final byte[][] plainText = {new byte[0]};
-        fsService.getKey(new FStoreCallback() {
-            @Override
-            public void onValue(String string) {
-                SecretKey secretKey = convertStringToKey(string);
-                restoredKey = secretKey;
-                try {
-                    final Cipher cipher = getInstance("AES/GCM/NoPadding");
-                    AlgorithmParameterSpec gcmInitVector = new GCMParameterSpec(128, textToDecrypt.getBytes(), 0, 12);
-                    cipher.init(DECRYPT_MODE, secretKey, gcmInitVector);
-                    plainText[0] = cipher.doFinal(textToDecrypt.getBytes(), 12, textToDecrypt.length() - 12);
-
-                } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        return plainText[0];
+        return decryptedData;
     }
 
     private String convertKeyToString(SecretKey key) throws IllegalArgumentException {
@@ -111,14 +151,14 @@ public class AESUtils {
             throw new IllegalArgumentException("Not an AES key");
         }
         byte[] keyData = key.getEncoded();
-        String stringKey = Base64.encodeToString(keyData, Base64.DEFAULT);
+        String stringKey = Base64.encodeToString(keyData, Base64.NO_WRAP);
         Log.i(AESUtils_TAG, "Convert " + Arrays.toString(key.getEncoded()));
         Log.i(AESUtils_TAG, "Convert " + stringKey);
         return stringKey;
     }
 
     private SecretKey convertStringToKey(String key) throws IllegalStateException {
-        byte[] keyData = Base64.decode(key, Base64.DEFAULT);
+        byte[] keyData = Base64.decode(key, Base64.NO_WRAP);
         SecretKey aesKey = new SecretKeySpec(keyData, 0, keyData.length, "AES");
         Log.i(AESUtils_TAG, "Revert " + key);
         Log.i(AESUtils_TAG, "Revert " + Arrays.toString(aesKey.getEncoded()));
