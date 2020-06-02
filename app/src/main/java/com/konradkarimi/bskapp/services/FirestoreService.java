@@ -37,7 +37,7 @@ public class FirestoreService {
         db.document("Keys/AESKey").set(secretData).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                Log.i("BSK", "Saved AESKey ");
+//                Log.i("BSK", "Saved AESKey ");
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -56,7 +56,7 @@ public class FirestoreService {
                 if (task.isSuccessful()) {
                     DocumentSnapshot doc = task.getResult();
                     if (doc.exists()) {
-                        Log.i("BSK", "Document data " + doc.getData());
+//                        Log.i("BSK", "Document data " + doc.getData());
                         secretKey = doc.getData();
                         fStoreCallback.onValue(secretKey.get("AESKey").toString());
                     } else {
