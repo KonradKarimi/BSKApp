@@ -15,6 +15,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -35,6 +36,7 @@ public class AESUtils {
     private FirestoreService fsService;
     public SecretKey oriKey;
     public SecretKey restoredKey;
+    public byte[] ini;
 
     public AESUtils() {
         fsService = new FirestoreService();
@@ -54,6 +56,7 @@ public class AESUtils {
         SecureRandom secureRandom = new SecureRandom();
         byte[] initVector = new byte[12];
         secureRandom.nextBytes(initVector);
+        ini = initVector;
         return initVector;
     }
 
@@ -109,7 +112,7 @@ public class AESUtils {
         }
         byte[] keyData = key.getEncoded();
         String stringKey = Base64.encodeToString(keyData, Base64.DEFAULT);
-        Log.i(AESUtils_TAG, "Convert " + key.getEncoded());
+        Log.i(AESUtils_TAG, "Convert " + Arrays.toString(key.getEncoded()));
         Log.i(AESUtils_TAG, "Convert " + stringKey);
         return stringKey;
     }
@@ -118,7 +121,7 @@ public class AESUtils {
         byte[] keyData = Base64.decode(key, Base64.DEFAULT);
         SecretKey aesKey = new SecretKeySpec(keyData, 0, keyData.length, "AES");
         Log.i(AESUtils_TAG, "Revert " + key);
-        Log.i(AESUtils_TAG, "Revert " + aesKey.getEncoded());
+        Log.i(AESUtils_TAG, "Revert " + Arrays.toString(aesKey.getEncoded()));
         return aesKey;
     }
 
