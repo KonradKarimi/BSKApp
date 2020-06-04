@@ -52,8 +52,9 @@ public class FileHandler {
     public void sendFile(String text) {
         Intent sendIntent = new Intent(Intent.ACTION_SEND);
         sendIntent.putExtra(Intent.EXTRA_TEXT, text);
+        sendIntent.putExtra(Intent.EXTRA_TITLE, "Share your encrypted message!");
         sendIntent.setType("text/plain");
-        mFragment.startActivity(sendIntent);
+        mFragment.startActivity(Intent.createChooser(sendIntent, "Share"));
     }
 
 }

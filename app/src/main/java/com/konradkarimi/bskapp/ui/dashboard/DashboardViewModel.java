@@ -10,10 +10,14 @@ public class DashboardViewModel extends ViewModel {
 
     public DashboardViewModel() {
         mText = new MutableLiveData<>();
-        mText.setValue("This is dashboard fragment");
+        mText.setValue("Here is your text to encrypt! 🔐");
     }
 
     public LiveData<String> getText() {
         return mText;
+    }
+
+    public void setText(CharSequence s) {
+        this.mText.setValue(s.toString());
     }
 }
