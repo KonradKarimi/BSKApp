@@ -38,9 +38,6 @@ public class AESUtils {
     private static String AESUtils_TAG = "AES";
 
     private FirestoreService fsService;
-    public SecretKey oriKey;
-    public SecretKey restoredKey;
-    public byte[] iIv;
 
     public AESUtils() {
         fsService = new FirestoreService();
@@ -113,7 +110,7 @@ public class AESUtils {
 
 
     public HashMap<String, byte[]> encryptText(String textToEncrypt) {
-        removeKeyFromKeystore();
+//        removeKeyFromKeystore();
 
         byte[] cipherText = new byte[0];
         byte[] plainText = textToEncrypt.getBytes();
