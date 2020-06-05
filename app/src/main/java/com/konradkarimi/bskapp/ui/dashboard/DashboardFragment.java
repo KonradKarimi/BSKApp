@@ -4,30 +4,25 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelProviders;
 
-import com.konradkarimi.bskapp.R;
 import com.konradkarimi.bskapp.databinding.FragmentDashboardBinding;
-import com.konradkarimi.bskapp.databinding.FragmentHomeBinding;
-import com.konradkarimi.bskapp.utils.AESUtils;
+import com.konradkarimi.bskapp.services.FirestoreService;
 import com.konradkarimi.bskapp.utils.FileHandler;
 import com.konradkarimi.bskapp.utils.RSAUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.HashMap;
 
 public class DashboardFragment extends Fragment {
 
@@ -38,6 +33,7 @@ public class DashboardFragment extends Fragment {
     private FragmentDashboardBinding binding;
     private FileHandler fileHandler = new FileHandler(this);
     private RSAUtils rsaUtils = new RSAUtils();
+    private FirestoreService firestoreService = new FirestoreService();
 
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -59,7 +55,15 @@ public class DashboardFragment extends Fragment {
         binding.encryptBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PublicKey publicKey = rsaUtils.generateKeyPair().getPublic();
+                PublicKey publicKey;
+                if (dashboardViewModel.getPublicKeyText().getValue() == null) {
+                    rsaUtils.generateKeyPair();
+                    Toast.makeText(getContext(), "Public Key not provided!\nSigned with your public key!", Toast.LENGTH_LONG).show();
+                    publicKey = rsaUtils.getKeyPair().getPublic();
+                } else {
+                    publicKey = rsaUtils.importPublicKey(dashboardViewModel.getPublicKeyText().getValue());
+                }
+                firestoreService.saveRSAKey(Base64.encodeToString(publicKey.getEncoded(), Base64.NO_WRAP));
                 String encryptedData = rsaUtils.encryptData(dashboardViewModel.getText().getValue(), publicKey);
                 dashboardViewModel.setText(encryptedData);
                 fileHandler.sendFile(dashboardViewModel.getText().getValue());
@@ -75,6 +79,13 @@ public class DashboardFragment extends Fragment {
             }
         });
 
+        binding.sharePubKeyBTN.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String publicKey = rsaUtils.exportPublicKey();
+                fileHandler.sharePublicKey(publicKey);
+            }
+        });
         return view;
     }
 
@@ -83,6 +94,8 @@ public class DashboardFragment extends Fragment {
         super.onDestroy();
         binding = null;
     }
+
+
 
 
     @Override
