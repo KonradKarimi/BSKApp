@@ -48,6 +48,22 @@ public class FirestoreService {
         });
     }
 
+    public void saveRSAKey(String key) {
+        Map<String, Object> secretData = new HashMap<>();
+        secretData.put("PublicKey", key);
+        db.document("Keys/RSA").set(secretData).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Log.i("BSK", "Saved RSA key ");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e("BSK", "Failed to save Key");
+            }
+        });
+    }
+
     public void saveIV(String iv) {
         Map<String, Object> secretData = new HashMap<>();
         secretData.put("IV", iv);

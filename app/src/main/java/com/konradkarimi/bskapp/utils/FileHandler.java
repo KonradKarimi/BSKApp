@@ -57,4 +57,12 @@ public class FileHandler {
         mFragment.startActivity(Intent.createChooser(sendIntent, "Share"));
     }
 
+    public void sharePublicKey(String text) {
+        Intent sendIntent = new Intent(Intent.ACTION_SEND);
+        sendIntent.putExtra(Intent.EXTRA_TEXT, text);
+        sendIntent.putExtra(Intent.EXTRA_TITLE, "Share your public key!");
+        sendIntent.setType("text/plain");
+        mFragment.startActivity(Intent.createChooser(sendIntent, "Share"));
+    }
+
 }
