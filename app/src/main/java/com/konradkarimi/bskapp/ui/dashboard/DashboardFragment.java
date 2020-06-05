@@ -63,7 +63,6 @@ public class DashboardFragment extends Fragment {
                 } else {
                     publicKey = rsaUtils.importPublicKey(dashboardViewModel.getPublicKeyText().getValue());
                 }
-                firestoreService.saveRSAKey(Base64.encodeToString(publicKey.getEncoded(), Base64.NO_WRAP));
                 String encryptedData = rsaUtils.encryptData(dashboardViewModel.getText().getValue(), publicKey);
                 dashboardViewModel.setText(encryptedData);
                 fileHandler.sendFile(dashboardViewModel.getText().getValue());
@@ -82,7 +81,9 @@ public class DashboardFragment extends Fragment {
         binding.sharePubKeyBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                rsaUtils.generateKeyPair();
                 String publicKey = rsaUtils.exportPublicKey();
+                firestoreService.addRSAKeytoCollection(publicKey);
                 fileHandler.sharePublicKey(publicKey);
             }
         });
@@ -94,8 +95,6 @@ public class DashboardFragment extends Fragment {
         super.onDestroy();
         binding = null;
     }
-
-
 
 
     @Override
