@@ -8,6 +8,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
@@ -63,6 +64,24 @@ public class FirestoreService {
             }
         });
     }
+
+    public void addRSAKeytoCollection(String key) {
+        Map<String, Object> secretData = new HashMap<>();
+        secretData.put("PublicKey", key);
+        db.collection("RSA_Keys").add(secretData).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+            @Override
+            public void onSuccess(DocumentReference documentReference) {
+                Log.i("BSK", "Saved RSA key under: " + documentReference.getId());
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e("BSK", "Failed to save Key " + e.getMessage());
+            }
+        });
+    }
+
 
     public void saveIV(String iv) {
         Map<String, Object> secretData = new HashMap<>();
