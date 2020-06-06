@@ -31,7 +31,7 @@ public class NotificationsFragment extends Fragment {
                 .addGroup("Contact me:")
                 .addEmail("konradkarimi@gmail.com")
                 .addGitHub("KonradKarimi")
-                .setDescription("This is an app prepared for 'Security of computer systems' lecture in UKW in Bydgoszcz.")
+                .setDescription("This is an app prepared for 'Security of computer systems' classes in UKW in Bydgoszcz.")
                 .create();
     }
 }
