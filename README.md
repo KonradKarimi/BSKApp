@@ -12,7 +12,7 @@ These instructions will get you a copy of the project up and running on your loc
 2. Get copy of this project from git
 
 ```
-git clone https://github.com/KonradKarimi/BKSApp.git
+git clone https://github.com/KonradKarimi/BSKApp.git
 ```
 
 ### Running project
